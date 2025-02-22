@@ -87,12 +87,12 @@ Despues de entender el dispositivo y conocer el debugger, es momento de buscar u
 
 Lo primero que vamos a hacer es poner un breakpoint en la función main con el comando `break main`, despues ejecutamos el programa con el comando `c`.
 
-![/assets/img/neworleans/main.png]
+![main](/assets/img/neworleans/main.png)
 
 
 Podemos ver que el main llama a varias funciones, para imprimir strings y pedirle la contraseña al usuario. Hay dos funciones que llaman la atención por sus nombres, `create_password` y `check_password`. Empezemos por `create_password`, ponemos un breakpoint en la función y seguimos ejecutando el programa.
 
-![/assets/img/neworleans/create_password]
+![create_password](/assets/img/neworleans/create_password.png)
 
 
 La primera instrucción es `mov`, esta instrucción carga el valor 0x2400 al registro r15. Las siguientes instrucciones `mov.b`, mueven un único byte a la dirección que hay en r15 más N bytes (0xN(r15)). Según este código la contraseña se almacena en 0x2400 y es siempre la misma, pero vamos a comprobarlo viendo la función `check_password` ponemos un break en la función y continuamos la ejecución. El programa parara para pedirnos la contraseña, ponemos cualquier cosa y ejecutamos el comando `c` otra vez.
@@ -100,7 +100,7 @@ La primera instrucción es `mov`, esta instrucción carga el valor 0x2400 al reg
 
 Si nos fijamos en la dirección 0x439c podemos ver que nuestra string esta almacenada allí. Siguiendo con la función `check_password`:
 
-![/assets/img/neworleans/check_password.png]
+![check_password](/assets/img/neworleans/check_password.png)
 
 
 Podemos ver que el programa almacena la dirección del primer caracter de nuestra string que esta en r15 en r13 con la instrucción `mov` y que despues le añade el valor de r14 que al principio es 0. Despues compara `cmp.b  @r13, 0x2400(r14)` el valor que se encuentra en la dirección almacenada en r13 con lo que hay en la dirección de r14 mas 0x2400 bytes. Si ambos valores son iguales la flag ZERO se pone en el registro `sr` (las flags activas se pueden ver poniendo el cursor encima de los valores del registro, Z es la flag ZERO y la C es de carry), despues viene un salto condicional `jnz $+0xc <check_password+0x16>` que se ejecuta si la flag Z no esta activa, este salto termina la función. La función en caso de que los dos primeros valores sean iguales aumenta el valor de r14 y lo compara con 0x8, esto permite que se cree un bucle que compara los 8 caracteres de la contraseña con los 8 primeros caracteres de la string (el octavo es el null byte 0x00), en c esta función se podría escribir como algo asi:
@@ -140,7 +140,7 @@ Ahora que entendemos como funciona el programa podemos recuperar la contraseña 
 
 Para copiar las caracteres de la memoria debemos ejecutar la función entera con el comando `f`, si vamos a la dirección 0x2400 podremos ver la contraseña y copiarla.
 
-![/assets/img/neworleans/password.png]
+![password](/assets/img/neworleans/password.png)
 
 O podemos usar el siguiente comando `read 0x2400 7`. Ahora que ya tenemos la contraseña podemos introducirla y comprobar que funciona, despues podemos resolver el nivel con el comando `solve`.
 
